@@ -1,54 +1,170 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package2, ShoppingCart } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { 
+  IconChefHat, 
+  IconShoppingCart, 
+  IconCurrencyDollar, 
+  IconStar 
+} from "@tabler/icons-react";
+import { format } from "date-fns";
 
-export default function ProviderDashboard() {
-  const router = useRouter();
+import { StatCard, StatCardGrid } from "@/components/dashboard/DashboardCards";
+import { ChartCard, DashboardAreaChart, DashboardPieChart } from "@/components/dashboard/ChartComponents";
+import { getProviderDashboardStats } from "@/app/services/dashboardService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppSelector } from "@/redux/hooks";
+import { currentUser } from "@/redux/features/auth/authSlice";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function ProviderDashboardPage() {
+  const user = useAppSelector(currentUser);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        // Don't check for user ID, just pass a placeholder value or empty string
+        const data = await getProviderDashboardStats(user?._id || "provider-1");
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Remove user ID dependency, always fetch data
+    fetchDashboardData();
+  }, []); // Remove user?._id dependency
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Chart configs
+  const revenueChartConfig = {
+    revenue: {
+      label: "Revenue",
+      color: "hsl(var(--primary))",
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Card className="rounded-xl shadow mb-6">
+          <CardHeader>
+            <Skeleton className="h-8 w-[200px]" />
+            <Skeleton className="h-4 w-[300px]" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-[300px] w-full" />
+              <Skeleton className="h-[300px] w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-[100px] mb-3" />
+                <Skeleton className="h-10 w-[150px]" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="container mx-auto p-6">
+        <p className="text-center text-gray-500">Failed to load dashboard data. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Provider Dashboard</h1>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Manage Meals</CardTitle>
-            <Package2 className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Meals</div>
-            <p className="text-muted-foreground text-xs">
-              Add, edit, and manage your meal offerings
-            </p>
-            <button
-              onClick={() => router.push("/dashboard/provider/manage-meals")}
-              className="bg-primary mt-4 rounded-md px-4 py-2 text-sm text-white"
-            >
-              Manage Meals
-            </button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Manage Orders</CardTitle>
-            <ShoppingCart className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Orders</div>
-            <p className="text-muted-foreground text-xs">
-              View and process customer orders
-            </p>
-            <button
-              onClick={() => router.push("/dashboard/provider/manage-orders")}
-              className="bg-primary mt-4 rounded-md px-4 py-2 text-sm text-white"
-            >
-              Manage Orders
-            </button>
-          </CardContent>
-        </Card>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Welcome Card */}
+      <Card className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Provider'}!</CardTitle>
+          <CardDescription>
+            Here's an overview of your restaurant performance.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      {/* Stats Overview */}
+      <StatCardGrid>
+        <StatCard
+          title="Total Meals"
+          value={dashboardData.totalMeals}
+          icon={<IconChefHat className="h-6 w-6" />}
+          className="bg-green-50"
+        />
+        <StatCard
+          title="Active Meals"
+          value={dashboardData.activeMeals}
+          description={`${((dashboardData.activeMeals / dashboardData.totalMeals) * 100).toFixed(0)}% of total`}
+          icon={<IconChefHat className="h-6 w-6" />}
+          className="bg-blue-50"
+        />
+        <StatCard
+          title="Total Orders"
+          value={dashboardData.totalOrders.toLocaleString()}
+          icon={<IconShoppingCart className="h-6 w-6" />}
+          className="bg-yellow-50"
+        />
+        <StatCard
+          title="Total Revenue"
+          value={formatCurrency(dashboardData.totalRevenue)}
+          icon={<IconCurrencyDollar className="h-6 w-6" />}
+          className="bg-purple-50"
+        />
+      </StatCardGrid>
+      
+      {/* Second Row of Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
+        <StatCard
+          title="Average Rating"
+          value={dashboardData.averageRating}
+          icon={<IconStar className="h-6 w-6 text-yellow-500" />}
+          className="bg-amber-50 col-span-1"
+        />
+      </div>
+      
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Revenue Chart */}
+        <ChartCard title="Revenue Trend" subtitle="Last 7 days">
+          <DashboardAreaChart
+            data={dashboardData.revenueOverTime.map((item: any) => ({
+              date: format(new Date(item.date), 'MMM dd'),
+              revenue: item.revenue,
+            }))}
+            xKey="date"
+            yKeys={["revenue"]}
+            config={revenueChartConfig}
+          />
+        </ChartCard>
+        
+        {/* Order Status Distribution */}
+        <ChartCard title="Order Status Distribution">
+          <DashboardPieChart data={dashboardData.orderStatusDistribution} />
+        </ChartCard>
       </div>
     </div>
   );

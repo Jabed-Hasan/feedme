@@ -1,90 +1,229 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Mail, LogIn } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useAdminAuth } from "./hooks/useAdminAuth";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { 
+  IconUser, 
+  IconShoppingCart, 
+  IconChefHat, 
+  IconCurrencyDollar, 
+  IconUsers 
+} from "@tabler/icons-react";
+import { format } from "date-fns";
 
-export default function AdminDashboard() {
-  const router = useRouter();
-  const { isChecking, isAuthenticated, redirectToLogin } = useAdminAuth();
+import { StatCard, StatCardGrid } from "@/components/dashboard/DashboardCards";
+import { ChartCard, DashboardAreaChart, DashboardBarChart, DashboardPieChart } from "@/components/dashboard/ChartComponents";
+import { DashboardTable } from "@/components/dashboard/DashboardTable";
+import { getAdminDashboardStats } from "@/app/services/dashboardService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppSelector } from "@/redux/hooks";
+import { currentUser } from "@/redux/features/auth/authSlice";
+import { Skeleton } from "@/components/ui/skeleton";
 
-  // Show loading state while checking authentication
-  if (isChecking) {
+export default function AdminDashboardPage() {
+  const user = useAppSelector(currentUser);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        const data = await getAdminDashboardStats();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Chart configs
+  const revenueChartConfig = {
+    revenue: {
+      label: "Revenue",
+      color: "hsl(var(--primary))",
+    }
+  };
+
+  const usersChartConfig = {
+    count: {
+      label: "New Users",
+      color: "hsl(var(--primary))",
+    }
+  };
+
+  // Table columns for recent orders
+  const orderColumns = [
+    {
+      accessorKey: "id",
+      header: "Order ID",
+    },
+    {
+      accessorKey: "customer",
+      header: "Customer",
+    },
+    {
+      accessorKey: "amount",
+      header: "Amount",
+      cell: ({ row }: any) => formatCurrency(row.original.amount),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }: any) => {
+        const status = row.original.status;
+        let color = "bg-gray-100 text-gray-800";
+        
+        if (status === "Delivered") color = "bg-green-100 text-green-800";
+        else if (status === "Processing") color = "bg-blue-100 text-blue-800";
+        else if (status === "Shipped") color = "bg-purple-100 text-purple-800";
+        else if (status === "Pending") color = "bg-yellow-100 text-yellow-800";
+        
+        return (
+          <span className={`rounded-full px-2 py-1 text-xs font-medium ${color}`}>
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "date",
+      header: "Date",
+    },
+  ];
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <span className="ml-3">Checking authorization...</span>
+      <div className="container mx-auto p-6 space-y-6">
+        <Card className="rounded-xl shadow mb-6">
+          <CardHeader>
+            <Skeleton className="h-8 w-[200px]" />
+            <Skeleton className="h-4 w-[300px]" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-[300px] w-full" />
+              <Skeleton className="h-[300px] w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-[100px] mb-3" />
+                <Skeleton className="h-10 w-[150px]" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Authentication prompt if not authenticated
-  if (!isAuthenticated) {
+  if (!dashboardData) {
     return (
-      <div>
-        <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
-        
-        <Card className="w-full">
-          <CardContent className="flex flex-col items-center justify-center py-10">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold mb-2">Authentication Required</h2>
-              <p className="text-gray-500">Please log in with admin credentials to access the dashboard.</p>
-            </div>
-            
-            <Button onClick={redirectToLogin} className="flex items-center gap-2">
-              <LogIn className="h-4 w-4" />
-              Log In
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto p-6">
+        <p className="text-center text-gray-500">Failed to load dashboard data. Please try again.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Manage Users</CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Users</div>
-            <p className="text-muted-foreground text-xs">
-              Manage users, roles and permissions
-            </p>
-            <button
-              onClick={() => router.push("/dashboard/admin/manage-users")}
-              className="bg-primary mt-4 rounded-md px-4 py-2 text-sm text-white"
-            >
-              Manage Users
-            </button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Newsletter</CardTitle>
-            <Mail className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Subscribers</div>
-            <p className="text-muted-foreground text-xs">
-              View all newsletter subscribers
-            </p>
-            <button
-              onClick={() => router.push("/dashboard/admin/newsletter-subscribers")}
-              className="bg-primary mt-4 rounded-md px-4 py-2 text-sm text-white"
-            >
-              View Subscribers
-            </button>
-          </CardContent>
-        </Card>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Welcome Card */}
+      <Card className="rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 shadow-sm mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Admin'}!</CardTitle>
+          <CardDescription>
+            Here's what's happening with your food delivery platform today.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      {/* Stats Overview */}
+      <StatCardGrid>
+        <StatCard
+          title="Total Users"
+          value={dashboardData.totalUsers.toLocaleString()}
+          icon={<IconUsers className="h-6 w-6" />}
+          className="bg-blue-50"
+        />
+        <StatCard
+          title="Total Providers"
+          value={dashboardData.totalProviders.toLocaleString()}
+          icon={<IconChefHat className="h-6 w-6" />}
+          className="bg-green-50"
+        />
+        <StatCard
+          title="Total Orders"
+          value={dashboardData.totalOrders.toLocaleString()}
+          icon={<IconShoppingCart className="h-6 w-6" />}
+          className="bg-yellow-50"
+        />
+        <StatCard
+          title="Total Revenue"
+          value={formatCurrency(dashboardData.totalRevenue)}
+          icon={<IconCurrencyDollar className="h-6 w-6" />}
+          className="bg-purple-50"
+        />
+      </StatCardGrid>
+      
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Revenue Chart */}
+        <ChartCard title="Revenue Trend" subtitle="Last 6 months">
+          <DashboardBarChart
+            data={dashboardData.revenueOverTime.map((item: any) => ({
+              month: item.month,
+              revenue: item.revenue,
+            }))}
+            xKey="month"
+            yKeys={["revenue"]}
+            config={revenueChartConfig}
+          />
+        </ChartCard>
+        
+        {/* New Users Chart */}
+        <ChartCard title="New Users" subtitle="Last 7 days">
+          <DashboardAreaChart
+            data={dashboardData.newUsersOverTime.map((item: any) => ({
+              date: format(new Date(item.date), 'MMM dd'),
+              count: item.count,
+            }))}
+            xKey="date"
+            yKeys={["count"]}
+            config={usersChartConfig}
+          />
+        </ChartCard>
+      </div>
+      
+      {/* Order Status Pie Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="Order Status Distribution" subtitle="Current status of all orders">
+          <DashboardPieChart data={dashboardData.orderStatusDistribution} />
+        </ChartCard>
+        
+        {/* Recent Orders Table */}
+        <DashboardTable
+          title="Recent Orders"
+          subtitle="Latest transactions across the platform"
+          columns={orderColumns}
+          data={dashboardData.recentOrders}
+        />
       </div>
     </div>
   );
