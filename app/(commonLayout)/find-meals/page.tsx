@@ -55,7 +55,7 @@ export default function FindMealsPage() {
   const [providerSearchTerm, setProviderSearchTerm] = useState("");
   // New pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const mealsPerPage = 9;
+  const mealsPerPage = 8;
 
   // Get all unique providers from the data
   const providers = mealData?.data
@@ -781,7 +781,7 @@ export default function FindMealsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {currentMeals.map((meal) => (
               <Link
                 href={`/order/${meal._id}`}
@@ -789,13 +789,13 @@ export default function FindMealsPage() {
                 className="hover:shadow-feed-jungle/20 cursor-pointer overflow-hidden rounded-2xl bg-white p-4 shadow-lg transition-shadow duration-300"
                 // onClick={() => handleMealSelect(meal._id)}
               >
-                <div className="relative aspect-video">
+                <div className="relative h-40 w-full">
                   <Image
                     src={meal.image}
                     alt={meal.name}
                     fill
                     className="rounded-lg object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                   <Badge
                     className="bg-feed-lime absolute top-2 right-2 h-6 rounded-full text-base text-black"
@@ -804,8 +804,8 @@ export default function FindMealsPage() {
                     {meal.category}
                   </Badge>
                 </div>
-                <div className="py-4">
-                  <div className="mb-2 flex items-center justify-between">
+                <div className="py-3">
+                  <div className="mb-1 flex items-center justify-between">
                     <h3 className="truncate text-lg font-semibold">
                       {meal.name}
                     </h3>
@@ -821,7 +821,7 @@ export default function FindMealsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <ChefHat className="h-4 w-4" />
-                      <span>
+                      <span className="truncate max-w-[100px]">
                         {typeof meal.providerId === "object" &&
                         meal.providerId?.name
                           ? meal.providerId.name
