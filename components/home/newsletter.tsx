@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
@@ -22,17 +22,32 @@ const Newsletter = () => {
       return;
     }
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccess(true);
-      setEmail("");
+    try {
+      // Format exactly matching the screenshot
+      const response = await fetch("http://localhost:5000/api/newsletter/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
       
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
-    }, 1000);
+      if (data.status) {
+        toast.success(data.message || "Successfully subscribed to newsletter");
+        setEmail("");
+      } else {
+        setError(data.message || "Failed to subscribe. Please try again.");
+        toast.error(data.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error subscribing to newsletter:", err);
+      setError("An error occurred. Please try again later.");
+      toast.error("An error occurred. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,15 +114,13 @@ const Newsletter = () => {
                 
                 <button
                   type="submit"
-                  disabled={isSubmitting || success}
+                  disabled={isSubmitting}
                   className={`w-full flex items-center justify-center gap-2 py-3 px-4 bg-feed-jungle text-feed-lime rounded-lg hover:bg-feed-jungle/90 transition-colors ${
-                    (isSubmitting || success) && "opacity-70 cursor-not-allowed"
+                    isSubmitting && "opacity-70 cursor-not-allowed"
                   }`}
                 >
                   {isSubmitting ? (
                     "Subscribing..."
-                  ) : success ? (
-                    "Subscribed Successfully!"
                   ) : (
                     <>
                       Subscribe Now <Send className="h-4 w-4" />
