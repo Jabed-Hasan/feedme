@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -41,7 +41,7 @@ export function useAdminAuth() {
   const { user, token } = auth;
   
   // Function to check if token is valid
-  const isTokenValid = (token: string | null): boolean => {
+  const isTokenValid = useCallback((token: string | null): boolean => {
     if (!token) return false;
     
     try {
@@ -67,10 +67,10 @@ export function useAdminAuth() {
       console.error('Failed to decode token:', error);
       return false;
     }
-  };
+  }, []);
   
   // Function to manually check login status without redirects
-  const checkLoginStatus = () => {
+  const checkLoginStatus = useCallback(() => {
     console.log('Checking login status...');
     console.log('Token:', token ? `${token.substring(0, 15)}...` : 'No token');
     console.log('User:', user);
@@ -97,7 +97,7 @@ export function useAdminAuth() {
     
     console.log('User is authenticated as admin');
     return true;
-  };
+  }, [token, user, isTokenValid]);
   
   // Function to fix common token issues
   const fixTokenIssues = () => {
@@ -168,7 +168,7 @@ export function useAdminAuth() {
     };
     
     checkAdminAuth();
-  }, [token, user]);
+  }, [token, user, checkLoginStatus]);
   
   // Provide login redirect function for manual use
   const redirectToLogin = () => {

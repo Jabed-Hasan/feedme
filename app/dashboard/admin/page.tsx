@@ -5,7 +5,6 @@ import { Users, Mail, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "./hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function AdminDashboard() {
   const router = useRouter();

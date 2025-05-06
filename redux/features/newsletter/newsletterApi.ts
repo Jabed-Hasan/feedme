@@ -1,5 +1,6 @@
 import { baseApi } from "@/redux/api/baseApi";
 import { RootState } from "@/redux/store";
+import { store } from "@/redux/store";
 
 export interface Subscriber {
   id: string;
@@ -32,7 +33,7 @@ const getFormattedToken = (token: string | null) => {
 // Helper to get best available token
 const getBestToken = () => {
   // First try Redux state
-  const state = (baseApi.getState() as RootState);
+  const state = store.getState() as RootState;        
   const reduxToken = state?.auth?.token;
   
   // Then try localStorage

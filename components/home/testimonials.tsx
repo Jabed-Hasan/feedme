@@ -13,7 +13,7 @@ const Testimonials = () => {
       position: "Marketing Executive",
       avatar: "/images/placeholder.jpg",
       rating: 5,
-      comment: "Feedme has completely transformed my lunch breaks at work. The meals are always fresh, delicious, and perfectly portioned. I've been able to maintain a healthy diet without sacrificing taste or time.",
+      comment: "Feedme has completely transformed my lunch breaks at work. The meals are always fresh, delicious, and perfectly portioned. I&apos;ve been able to maintain a healthy diet without sacrificing taste or time.",
     },
     {
       id: 2,
@@ -21,7 +21,7 @@ const Testimonials = () => {
       position: "Software Engineer",
       avatar: "/images/placeholder.jpg",
       rating: 5,
-      comment: "As someone with specific dietary needs, finding convenient meal options has always been challenging. Feedme's customization options and attention to dietary restrictions have made my life so much easier.",
+      comment: "As someone with specific dietary needs, finding convenient meal options has always been challenging. Feedme&apos;s customization options and attention to dietary restrictions have made my life so much easier.",
     },
     {
       id: 3,
@@ -53,7 +53,7 @@ const Testimonials = () => {
     );
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     return Array(5)
       .fill(0)
       .map((_, i) => (
@@ -74,7 +74,7 @@ const Testimonials = () => {
             What Our Customers Say
           </h2>
           <p className="text-feed-lime/70 max-w-2xl mx-auto">
-            Don't just take our word for it - hear from our satisfied customers who have transformed their eating habits with Feedme
+            Don&apos;t just take our word for it - hear from our satisfied customers who have transformed their eating habits with Feedme
           </p>
         </div>
 
@@ -96,9 +96,9 @@ const Testimonials = () => {
               
               <div className="flex-1">
                 <blockquote className="text-gray-700 text-lg italic relative">
-                  <span className="text-5xl text-feed-jungle/20 absolute -top-6 -left-2">"</span>
+                  <span className="text-5xl text-feed-jungle/20 absolute -top-6 -left-2">&quot;</span>
                   {testimonials[currentIndex].comment}
-                  <span className="text-5xl text-feed-jungle/20 absolute -bottom-10 right-0">"</span>
+                  <span className="text-5xl text-feed-jungle/20 absolute -bottom-10 right-0">&quot;</span>
                 </blockquote>
               </div>
             </div>

@@ -11,7 +11,7 @@ const Newsletter = () => {
   
   const [subscribe, { isLoading: isSubmitting }] = useSubscribeMutation();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     
@@ -37,8 +37,16 @@ const Newsletter = () => {
       let errorMessage = "An error occurred. Please try again later.";
       
       // Check if the error has a data property with a message
-      if (err && typeof err === 'object' && 'data' in err && err.data && 'message' in err.data) {
-        errorMessage = err.data.message;
+      if (err && 
+          typeof err === 'object' && 
+          err !== null && 
+          'data' in err && 
+          err.data && 
+          typeof err.data === 'object' &&
+          err.data !== null &&
+          'message' in err.data
+      ) {
+        errorMessage = err.data.message as string;
       }
       
       setError(errorMessage);

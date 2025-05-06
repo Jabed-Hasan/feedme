@@ -77,16 +77,26 @@ export const fixAuthToken = () => {
   }
 };
 
+// Define interface for the debugAuth object
+interface DebugAuth {
+  logAuthStatus: () => { isValid: boolean; payload?: Record<string, unknown>; error?: unknown };
+  fixAuthToken: () => boolean;
+  getTokenPayload: () => Record<string, unknown> | null;
+}
+
 // Expose auth debugging to window for console debugging
 if (typeof window !== 'undefined') {
-  (window as any).debugAuth = {
-    logAuthStatus,
-    fixAuthToken,
-    getTokenPayload: () => {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      
-      return decodeJwt(token);
-    }
-  };
+  // Add property to window object with proper typing
+  Object.defineProperty(window, 'debugAuth', {
+    value: {
+      logAuthStatus,
+      fixAuthToken,
+      getTokenPayload: () => {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+        
+        return decodeJwt(token);
+      }
+    } as DebugAuth
+  });
 } 

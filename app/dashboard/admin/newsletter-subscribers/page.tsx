@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, LogIn } from "lucide-react";
 import { useAdminAuth } from "../hooks/useAdminAuth";
@@ -56,25 +56,35 @@ const MOCK_SUBSCRIBERS = [
   }
 ];
 
+// Define interface for subscriber data
+interface Subscriber {
+  id?: string;
+  _id?: string;
+  email: string;
+  isSubscribed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function NewsletterSubscribers() {
   const { isChecking, isAuthenticated, redirectToLogin, token } = useAdminAuth();
   
-  const [subscribers, setSubscribers] = useState([]);
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
 
   // Function to use mock data as fallback
-  const loadMockData = () => {
+  const loadMockData = useCallback(() => {
     console.log('Loading mock subscriber data as fallback');
     setSubscribers(MOCK_SUBSCRIBERS);
     setUseMockData(true);
     setError(null);
     setIsLoading(false);
-  };
+  }, []);
 
   // Direct API fetch implementation
-  const fetchSubscribers = async () => {
+  const fetchSubscribers = useCallback(async () => {
     if (!isAuthenticated || !token) {
       setError("Authentication required. Please log in first.");
       return;
@@ -240,7 +250,8 @@ export default function NewsletterSubscribers() {
       }
     } catch (err) {
       console.error("Error fetching newsletter subscribers:", err);
-      setError(err instanceof Error ? err.message : "Failed to load subscribers");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load subscribers";
+      setError(errorMessage);
       
       // Fallback to mock data on error
       console.log('Error occurred, falling back to mock data');
@@ -248,19 +259,20 @@ export default function NewsletterSubscribers() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, token, loadMockData]);
 
   useEffect(() => {
     // Only fetch data if authenticated and not still checking
     if (isAuthenticated && !isChecking) {
       fetchSubscribers();
     }
-  }, [isAuthenticated, isChecking, token]);
+  }, [isAuthenticated, isChecking, token, fetchSubscribers]);
 
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "MMM dd, yyyy HH:mm");
-    } catch (error) {
+    } catch (err) {
+      console.error("Date formatting error:", err);
       return "Invalid date";
     }
   };
