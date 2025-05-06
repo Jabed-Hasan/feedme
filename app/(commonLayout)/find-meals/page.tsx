@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Filter,
+  X,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -56,6 +58,8 @@ export default function FindMealsPage() {
   // New pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const mealsPerPage = 8;
+  // State for mobile sidebar toggle
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Get all unique providers from the data
   const providers = mealData?.data
@@ -341,506 +345,343 @@ export default function FindMealsPage() {
     );
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold">Find Meals</h1>
+  // Sidebar component for filters
+  const FiltersSidebar = () => (
+    <div className="h-full flex-shrink-0 overflow-y-auto rounded-md border border-gray-200 bg-white p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Filters</h3>
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="rounded-full p-1 hover:bg-gray-100 md:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
 
       {/* Search input */}
       <div className="relative mb-6">
         <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
         <Input
           type="text"
-          placeholder="Search meals by name or description..."
+          placeholder="Search meals..."
           className="pl-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Responsive Filtering Section */}
-      <div className="mb-6 rounded-md border border-gray-200 bg-white p-4">
-        {/* Section Title - Mobile Only */}
-        <h3 className="mb-4 text-base font-semibold md:hidden">Filtering</h3>
-
-        {/* Desktop View - Horizontal layout */}
-        <div className="hidden md:flex md:flex-wrap md:items-center md:gap-0">
-          {/* Section Title - Desktop */}
-          <h3 className="mr-3 text-base font-semibold">Filtering</h3>
-
-          {/* Category Pills */}
-          <div className="mr-3 inline-flex items-center overflow-hidden rounded-md border">
-            <Button
-              variant={selectedCategory === null ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-              className="rounded-none border-0"
-            >
-              All
-            </Button>
-            <Button
-              variant={selectedCategory === "Breakfast" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedCategory("Breakfast")}
-              className="rounded-none border-0"
-            >
-              Breakfast
-            </Button>
-            <Button
-              variant={selectedCategory === "Lunch" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedCategory("Lunch")}
-              className="rounded-none border-0"
-            >
-              Lunch
-            </Button>
-            <Button
-              variant={selectedCategory === "Dinner" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedCategory("Dinner")}
-              className="rounded-none border-0"
-            >
-              Dinner
-            </Button>
-          </div>
-
-          {/* Minimum Rating */}
-          <div className="mr-3 flex items-center">
-            <span className="mr-2 text-sm font-medium">Minimum Rating</span>
-            <div className="relative flex w-[150px] items-center">
-              <Slider
-                value={[minRating]}
-                min={0}
-                max={5}
-                step={1}
-                onValueChange={(values) => setMinRating(values[0])}
-                className="w-full"
-              />
-              <div className="absolute -top-3 right-0 left-0 flex justify-between">
-                {[0, 1, 2, 3, 4, 5].map((value) => (
-                  <div
-                    key={value}
-                    className={`${minRating >= value ? "bg-black" : "bg-gray-200"}`}
-                    style={{
-                      height:
-                        value === 0 || value === 5
-                          ? "10px"
-                          : value % 2 === 0
-                            ? "8px"
-                            : "6px",
-                      width: value === 0 || value === 5 ? "2px" : "1px",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="ml-2 flex items-center gap-1">
-              <span className="text-sm font-medium">{minRating}</span>
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-
-          {/* Dietary Preferences Dropdown */}
-          <div className="mr-3 flex items-center">
-            <span className="mr-2 text-sm font-medium">
-              Dietary Preferences
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex h-9 w-[130px] items-center gap-1 px-3"
-                >
-                  {selectedPreferences.length > 0
-                    ? `${selectedPreferences.length} selected`
-                    : "Select"}
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[240px]">
-                <DropdownMenuLabel>Dietary Preferences</DropdownMenuLabel>
-                <div className="px-2 py-1.5">
-                  <div className="relative">
-                    <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
-                    <Input
-                      type="text"
-                      placeholder="Search preferences..."
-                      className="h-8 pl-7 text-sm"
-                      value={preferenceSearchTerm}
-                      onChange={(e) => setPreferenceSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <div className="max-h-[200px] overflow-auto">
-                  {filteredPreferences.length > 0 ? (
-                    filteredPreferences.map((preference) => (
-                      <DropdownMenuCheckboxItem
-                        key={preference}
-                        checked={selectedPreferences.includes(preference)}
-                        onCheckedChange={() =>
-                          handlePreferenceToggle(preference)
-                        }
-                      >
-                        {preference}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-center text-sm text-gray-500">
-                      No preferences found
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Meal Providers Dropdown */}
-          <div className="mr-3 flex items-center">
-            <span className="mr-2 text-sm font-medium">Meal Providers</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex h-9 w-[130px] items-center gap-1 px-3"
-                >
-                  {selectedProviders.length > 0
-                    ? `${selectedProviders.length} selected`
-                    : "Select"}
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[240px]">
-                <DropdownMenuLabel>Meal Providers</DropdownMenuLabel>
-                <div className="px-2 py-1.5">
-                  <div className="relative">
-                    <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
-                    <Input
-                      type="text"
-                      placeholder="Search providers..."
-                      className="h-8 pl-7 text-sm"
-                      value={providerSearchTerm}
-                      onChange={(e) => setProviderSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <div className="max-h-[200px] overflow-auto">
-                  {filteredProviders.length > 0 ? (
-                    filteredProviders.map((provider) => (
-                      <DropdownMenuCheckboxItem
-                        key={provider}
-                        checked={selectedProviders.includes(provider)}
-                        onCheckedChange={() => handleProviderToggle(provider)}
-                      >
-                        {provider}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-center text-sm text-gray-500">
-                      No providers found
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Spacer */}
-          <div className="flex-grow"></div>
-
-          {/* Reset Button */}
+      {/* Category Section */}
+      <div className="mb-6">
+        <h4 className="mb-3 text-sm font-medium">Category</h4>
+        <div className="flex flex-col space-y-2">
           <Button
-            variant="default"
+            variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
-            onClick={resetFilters}
-            className="bg-primary hover:bg-primary/90 text-white"
+            onClick={() => setSelectedCategory(null)}
+            className="justify-start"
           >
-            Reset
+            All
+          </Button>
+          <Button
+            variant={selectedCategory === "Breakfast" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory("Breakfast")}
+            className="justify-start"
+          >
+            Breakfast
+          </Button>
+          <Button
+            variant={selectedCategory === "Lunch" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory("Lunch")}
+            className="justify-start"
+          >
+            Lunch
+          </Button>
+          <Button
+            variant={selectedCategory === "Dinner" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory("Dinner")}
+            className="justify-start"
+          >
+            Dinner
           </Button>
         </div>
+      </div>
 
-        {/* Mobile View - Vertical layout */}
-        <div className="flex flex-col space-y-4 md:hidden">
-          {/* Category Pills */}
-          <div className="w-full">
-            <div className="inline-flex items-center overflow-hidden rounded-md border">
-              <Button
-                variant={selectedCategory === null ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setSelectedCategory(null)}
-                className="rounded-none border-0"
-              >
-                All
-              </Button>
-              <Button
-                variant={selectedCategory === "Breakfast" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setSelectedCategory("Breakfast")}
-                className="rounded-none border-0"
-              >
-                Breakfast
-              </Button>
-              <Button
-                variant={selectedCategory === "Lunch" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setSelectedCategory("Lunch")}
-                className="rounded-none border-0"
-              >
-                Lunch
-              </Button>
-              <Button
-                variant={selectedCategory === "Dinner" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setSelectedCategory("Dinner")}
-                className="rounded-none border-0"
-              >
-                Dinner
-              </Button>
-            </div>
-          </div>
-
-          {/* Minimum Rating */}
-          <div className="flex w-full items-center justify-between">
-            <span className="mr-8 text-sm font-medium">Minimum Rating</span>
-            <div className="flex items-center gap-5">
-              <div className="relative flex w-[180px] items-center">
-                <Slider
-                  value={[minRating]}
-                  min={0}
-                  max={5}
-                  step={1}
-                  onValueChange={(values) => setMinRating(values[0])}
-                  className="w-full"
+      {/* Minimum Rating */}
+      <div className="mb-6">
+        <h4 className="mb-3 text-sm font-medium">Minimum Rating</h4>
+        <div className="flex w-full flex-col space-y-4">
+          <div className="relative flex w-full items-center">
+            <Slider
+              value={[minRating]}
+              min={0}
+              max={5}
+              step={1}
+              onValueChange={(values) => setMinRating(values[0])}
+              className="w-full"
+            />
+            <div className="absolute -top-3 right-0 left-0 flex justify-between">
+              {[0, 1, 2, 3, 4, 5].map((value) => (
+                <div
+                  key={value}
+                  className={`${minRating >= value ? "bg-black" : "bg-gray-200"}`}
+                  style={{
+                    height:
+                      value === 0 || value === 5
+                        ? "10px"
+                        : value % 2 === 0
+                          ? "8px"
+                          : "6px",
+                    width: value === 0 || value === 5 ? "2px" : "1px",
+                  }}
                 />
-                <div className="absolute -top-3 right-0 left-0 flex justify-between">
-                  {[0, 1, 2, 3, 4, 5].map((value) => (
-                    <div
-                      key={value}
-                      className={`${minRating >= value ? "bg-black" : "bg-gray-200"}`}
-                      style={{
-                        height:
-                          value === 0 || value === 5
-                            ? "10px"
-                            : value % 2 === 0
-                              ? "8px"
-                              : "6px",
-                        width: value === 0 || value === 5 ? "2px" : "1px",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium">{minRating}</span>
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              </div>
+              ))}
             </div>
           </div>
-
-          {/* Dietary Preferences Dropdown */}
-          <div className="flex w-full items-center justify-between">
-            <span className="text-sm font-medium">Dietary Preferences</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex h-9 w-[180px] items-center gap-1 px-3"
-                >
-                  {selectedPreferences.length > 0
-                    ? `${selectedPreferences.length} selected`
-                    : "Select"}
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[240px]">
-                <DropdownMenuLabel>Dietary Preferences</DropdownMenuLabel>
-                <div className="px-2 py-1.5">
-                  <div className="relative">
-                    <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
-                    <Input
-                      type="text"
-                      placeholder="Search preferences..."
-                      className="h-8 pl-7 text-sm"
-                      value={preferenceSearchTerm}
-                      onChange={(e) => setPreferenceSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <div className="max-h-[200px] overflow-auto">
-                  {filteredPreferences.length > 0 ? (
-                    filteredPreferences.map((preference) => (
-                      <DropdownMenuCheckboxItem
-                        key={preference}
-                        checked={selectedPreferences.includes(preference)}
-                        onCheckedChange={() =>
-                          handlePreferenceToggle(preference)
-                        }
-                      >
-                        {preference}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-center text-sm text-gray-500">
-                      No preferences found
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium">{minRating}</span>
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
           </div>
+        </div>
+      </div>
 
-          {/* Meal Providers Dropdown */}
-          <div className="flex w-full items-center justify-between">
-            <span className="text-sm font-medium">Meal Providers</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex h-9 w-[180px] items-center gap-1 px-3"
-                >
-                  {selectedProviders.length > 0
-                    ? `${selectedProviders.length} selected`
-                    : "Select"}
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[240px]">
-                <DropdownMenuLabel>Meal Providers</DropdownMenuLabel>
-                <div className="px-2 py-1.5">
-                  <div className="relative">
-                    <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
-                    <Input
-                      type="text"
-                      placeholder="Search providers..."
-                      className="h-8 pl-7 text-sm"
-                      value={providerSearchTerm}
-                      onChange={(e) => setProviderSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <div className="max-h-[200px] overflow-auto">
-                  {filteredProviders.length > 0 ? (
-                    filteredProviders.map((provider) => (
-                      <DropdownMenuCheckboxItem
-                        key={provider}
-                        checked={selectedProviders.includes(provider)}
-                        onCheckedChange={() => handleProviderToggle(provider)}
-                      >
-                        {provider}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-center text-sm text-gray-500">
-                      No providers found
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Reset Button */}
-          <div className="w-full">
+      {/* Dietary Preferences */}
+      <div className="mb-6">
+        <h4 className="mb-3 text-sm font-medium">Dietary Preferences</h4>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
-              onClick={resetFilters}
-              className="bg-primary hover:bg-primary/90 float-right w-[180px] text-white"
+              className="flex w-full items-center gap-1 px-3"
             >
-              Reset
+              {selectedPreferences.length > 0
+                ? `${selectedPreferences.length} selected`
+                : "Select preferences"}
+              <ChevronDown className="ml-auto h-4 w-4" />
             </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Results count */}
-      <div className="mb-4">
-        <p className="text-sm text-gray-500">
-          {filteredMeals.length} {filteredMeals.length === 1 ? "meal" : "meals"}{" "}
-          found
-          {filteredMeals.length > 0
-            ? ` (showing ${indexOfFirstMeal + 1}-${Math.min(indexOfLastMeal, filteredMeals.length)} of ${filteredMeals.length})`
-            : ""}
-        </p>
-      </div>
-
-      {/* Meals grid */}
-      {filteredMeals.length === 0 ? (
-        <div className="py-12 text-center">
-          <h2 className="mb-4 text-xl font-medium">No meals found</h2>
-          <p className="mb-6 text-gray-500">
-            Try adjusting your search or filters
-          </p>
-          <Button onClick={resetFilters}>Show All Meals</Button>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {currentMeals.map((meal) => (
-              <Link
-                href={`/order/${meal._id}`}
-                key={meal._id}
-                className="hover:shadow-feed-jungle/20 cursor-pointer overflow-hidden rounded-2xl bg-white p-4 shadow-lg transition-shadow duration-300"
-                // onClick={() => handleMealSelect(meal._id)}
-              >
-                <div className="relative h-40 w-full">
-                  <Image
-                    src={meal.image}
-                    alt={meal.name}
-                    fill
-                    className="rounded-lg object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  />
-                  <Badge
-                    className="bg-feed-lime absolute top-2 right-2 h-6 rounded-full text-base text-black"
-                    variant="secondary"
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[240px]">
+            <DropdownMenuLabel>Dietary Preferences</DropdownMenuLabel>
+            <div className="px-2 py-1.5">
+              <div className="relative">
+                <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
+                <Input
+                  type="text"
+                  placeholder="Search preferences..."
+                  className="h-8 pl-7 text-sm"
+                  value={preferenceSearchTerm}
+                  onChange={(e) => setPreferenceSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <div className="max-h-[200px] overflow-auto">
+              {filteredPreferences.length > 0 ? (
+                filteredPreferences.map((preference) => (
+                  <DropdownMenuCheckboxItem
+                    key={preference}
+                    checked={selectedPreferences.includes(preference)}
+                    onCheckedChange={() => handlePreferenceToggle(preference)}
                   >
-                    {meal.category}
-                  </Badge>
+                    {preference}
+                  </DropdownMenuCheckboxItem>
+                ))
+              ) : (
+                <div className="px-2 py-1.5 text-center text-sm text-gray-500">
+                  No preferences found
                 </div>
-                <div className="py-3">
-                  <div className="mb-1 flex items-center justify-between">
-                    <h3 className="truncate text-lg font-semibold">
-                      {meal.name}
-                    </h3>
-                    <span className="text-feed-jungle/70 text-lg font-semibold">
-                      ৳{meal.price.toFixed(2)}
-                    </span>
-                  </div>
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-                  <p className="mb-2 line-clamp-2 text-sm text-gray-600">
-                    {meal.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <ChefHat className="h-4 w-4" />
-                      <span className="truncate max-w-[100px]">
-                        {typeof meal.providerId === "object" &&
-                        meal.providerId?.name
-                          ? meal.providerId.name
-                          : typeof meal.providerId === "string"
-                            ? meal.providerId
-                            : "Unknown Provider"}
-                      </span>
-                    </div>
-                    {renderRating(meal)}
-                  </div>
+      {/* Meal Providers */}
+      <div className="mb-6">
+        <h4 className="mb-3 text-sm font-medium">Meal Providers</h4>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex w-full items-center gap-1 px-3"
+            >
+              {selectedProviders.length > 0
+                ? `${selectedProviders.length} selected`
+                : "Select providers"}
+              <ChevronDown className="ml-auto h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[240px]">
+            <DropdownMenuLabel>Meal Providers</DropdownMenuLabel>
+            <div className="px-2 py-1.5">
+              <div className="relative">
+                <Search className="absolute top-2.5 left-2 h-3.5 w-3.5 text-gray-500" />
+                <Input
+                  type="text"
+                  placeholder="Search providers..."
+                  className="h-8 pl-7 text-sm"
+                  value={providerSearchTerm}
+                  onChange={(e) => setProviderSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <div className="max-h-[200px] overflow-auto">
+              {filteredProviders.length > 0 ? (
+                filteredProviders.map((provider) => (
+                  <DropdownMenuCheckboxItem
+                    key={provider}
+                    checked={selectedProviders.includes(provider)}
+                    onCheckedChange={() => handleProviderToggle(provider)}
+                  >
+                    {provider}
+                  </DropdownMenuCheckboxItem>
+                ))
+              ) : (
+                <div className="px-2 py-1.5 text-center text-sm text-gray-500">
+                  No providers found
                 </div>
-              </Link>
-            ))}
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Reset Button */}
+      <Button
+        variant="default"
+        size="sm"
+        onClick={resetFilters}
+        className="bg-primary hover:bg-primary/90 w-full text-white"
+      >
+        Reset Filters
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Find Meals</h1>
+        
+        {/* Mobile filter toggle button */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1 md:hidden"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Filter className="h-4 w-4" />
+          <span>Filters</span>
+        </Button>
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Main layout with sidebar and content */}
+      <div className="flex flex-row gap-6">
+        {/* Sidebar for desktop and mobile (with different CSS) */}
+        <div 
+          className={`${sidebarOpen ? 'fixed inset-y-0 right-0 z-50 w-80' : 'hidden'} md:static md:block md:w-64`}
+        >
+          <FiltersSidebar />
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1">
+          {/* Results count */}
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">
+              {filteredMeals.length} {filteredMeals.length === 1 ? "meal" : "meals"}{" "}
+              found
+              {filteredMeals.length > 0
+                ? ` (showing ${indexOfFirstMeal + 1}-${Math.min(indexOfLastMeal, filteredMeals.length)} of ${filteredMeals.length})`
+                : ""}
+            </p>
           </div>
 
-          {/* Pagination controls */}
-          {renderPagination()}
-        </>
-      )}
+          {/* Meals grid */}
+          {filteredMeals.length === 0 ? (
+            <div className="py-12 text-center">
+              <h2 className="mb-4 text-xl font-medium">No meals found</h2>
+              <p className="mb-6 text-gray-500">
+                Try adjusting your search or filters
+              </p>
+              <Button onClick={resetFilters}>Show All Meals</Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {currentMeals.map((meal) => (
+                  <Link
+                    href={`/order/${meal._id}`}
+                    key={meal._id}
+                    className="hover:shadow-feed-jungle/20 cursor-pointer overflow-hidden rounded-2xl bg-white p-4 shadow-lg transition-shadow duration-300"
+                  >
+                    <div className="relative h-40 w-full">
+                      <Image
+                        src={meal.image}
+                        alt={meal.name}
+                        fill
+                        className="rounded-lg object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      />
+                      <Badge
+                        className="bg-feed-lime absolute top-2 right-2 h-6 rounded-full text-base text-black"
+                        variant="secondary"
+                      >
+                        {meal.category}
+                      </Badge>
+                    </div>
+                    <div className="py-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h3 className="truncate text-lg font-semibold">
+                          {meal.name}
+                        </h3>
+                        <span className="text-feed-jungle/70 text-lg font-semibold">
+                          ৳{meal.price.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <p className="mb-2 line-clamp-2 text-sm text-gray-600">
+                        {meal.description}
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <ChefHat className="h-4 w-4" />
+                          <span className="truncate max-w-[100px]">
+                            {typeof meal.providerId === "object" &&
+                            meal.providerId?.name
+                              ? meal.providerId.name
+                              : typeof meal.providerId === "string"
+                                ? meal.providerId
+                                : "Unknown Provider"}
+                          </span>
+                        </div>
+                        {renderRating(meal)}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pagination controls */}
+              {renderPagination()}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
