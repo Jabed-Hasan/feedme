@@ -51,6 +51,10 @@ const Navbar = () => {
 
   const navItems = [
     {
+      name: "Home",
+      link: "/",
+    },
+    {
       name: "Find Meals",
       link: "/find-meals",
     },
@@ -65,7 +69,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white">
+    <nav className="bg-white sticky top-0 z-50 shadow-sm">
       <div className="container">
         <div className="flex items-center justify-between py-3">
           <div className="flex-shrink-0">
@@ -201,6 +205,13 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
+            <Link
+              href="/"
+              className="hover:text-feed-lime block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
             <Link
               href="/find-meals"
               className="hover:text-feed-lime block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
