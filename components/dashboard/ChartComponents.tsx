@@ -46,16 +46,21 @@ export function ChartCard({ title, subtitle, className, children }: ChartCardPro
   );
 }
 
+// Define generic data type for charts
+interface ChartDataItem {
+  [key: string]: string | number;
+}
+
 // Bar Chart Component
 interface BarChartProps {
-  data: any[];
+  data: ChartDataItem[];
   xKey: string;
   yKeys: string[];
   height?: number;
-  config: ChartConfig;
+  config?: ChartConfig;
 }
 
-export function DashboardBarChart({ data, xKey, yKeys, height = 300, config }: BarChartProps) {
+export function DashboardBarChart({ data, xKey, yKeys, height = 300 }: BarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -94,14 +99,14 @@ export function DashboardBarChart({ data, xKey, yKeys, height = 300, config }: B
 
 // Line Chart Component
 interface LineChartProps {
-  data: any[];
+  data: ChartDataItem[];
   xKey: string;
   yKeys: string[];
   height?: number;
-  config: ChartConfig;
+  config?: ChartConfig;
 }
 
-export function DashboardLineChart({ data, xKey, yKeys, height = 300, config }: LineChartProps) {
+export function DashboardLineChart({ data, xKey, yKeys, height = 300 }: LineChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -151,8 +156,10 @@ interface PieChartProps {
 }
 
 export function DashboardPieChart({ data, height = 300 }: PieChartProps) {
+  const displayHeight = height;
+  
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={displayHeight}>
       <PieChart>
         <Pie
           data={data}
@@ -189,14 +196,14 @@ export function DashboardPieChart({ data, height = 300 }: PieChartProps) {
 
 // Area Chart Component
 interface AreaChartProps {
-  data: any[];
+  data: ChartDataItem[];
   xKey: string;
   yKeys: string[];
   height?: number;
   config: ChartConfig;
 }
 
-export function DashboardAreaChart({ data, xKey, yKeys, height = 300, config }: AreaChartProps) {
+export function DashboardAreaChart({ data, xKey, yKeys, config }: AreaChartProps) {
   return (
     <ChartContainer className="h-[300px]" config={config}>
       <AreaChart

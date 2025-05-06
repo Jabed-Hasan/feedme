@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { 
-  IconUser, 
   IconShoppingCart, 
   IconChefHat, 
   IconCurrencyDollar, 
@@ -19,9 +18,42 @@ import { useAppSelector } from "@/redux/hooks";
 import { currentUser } from "@/redux/features/auth/authSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Define order status type
+type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered";
+
+// Define types for dashboard data
+interface DashboardData {
+  totalUsers: number;
+  totalProviders: number;
+  totalCustomers: number;
+  totalOrders: number;
+  totalRevenue: number;
+  activeUsers: number;
+  orderStatusDistribution: Array<{name: string, value: number}>;
+  newUsersOverTime: Array<{date: string, count: number}>;
+  revenueOverTime: Array<{month: string, revenue: number}>;
+  recentOrders: Array<{
+    id: string;
+    customer: string;
+    amount: number;
+    status: OrderStatus;
+    date: string;
+  }>;
+}
+
+// Define type for table cell
+interface TableCellProps {
+  row: {
+    original: {
+      amount: number;
+      status: OrderStatus;
+    };
+  };
+}
+
 export default function AdminDashboardPage() {
   const user = useAppSelector(currentUser);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,12 +109,12 @@ export default function AdminDashboardPage() {
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }: any) => formatCurrency(row.original.amount),
+      cell: ({ row }: TableCellProps) => formatCurrency(row.original.amount),
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }: any) => {
+      cell: ({ row }: TableCellProps) => {
         const status = row.original.status;
         let color = "bg-gray-100 text-gray-800";
         
@@ -149,7 +181,7 @@ export default function AdminDashboardPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Admin'}!</CardTitle>
           <CardDescription>
-            Here's what's happening with your food delivery platform today.
+            Here&apos;s what&apos;s happening with your food delivery platform today.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -187,10 +219,7 @@ export default function AdminDashboardPage() {
         {/* Revenue Chart */}
         <ChartCard title="Revenue Trend" subtitle="Last 6 months">
           <DashboardBarChart
-            data={dashboardData.revenueOverTime.map((item: any) => ({
-              month: item.month,
-              revenue: item.revenue,
-            }))}
+            data={dashboardData.revenueOverTime}
             xKey="month"
             yKeys={["revenue"]}
             config={revenueChartConfig}
@@ -200,7 +229,7 @@ export default function AdminDashboardPage() {
         {/* New Users Chart */}
         <ChartCard title="New Users" subtitle="Last 7 days">
           <DashboardAreaChart
-            data={dashboardData.newUsersOverTime.map((item: any) => ({
+            data={dashboardData.newUsersOverTime.map((item) => ({
               date: format(new Date(item.date), 'MMM dd'),
               count: item.count,
             }))}

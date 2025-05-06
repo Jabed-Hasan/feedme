@@ -17,9 +17,20 @@ import { useAppSelector } from "@/redux/hooks";
 import { currentUser } from "@/redux/features/auth/authSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Define a type for dashboard data
+interface DashboardData {
+  totalMeals: number;
+  activeMeals: number;
+  totalOrders: number;
+  totalRevenue: number;
+  averageRating: number;
+  orderStatusDistribution: Array<{name: string, value: number}>;
+  revenueOverTime: Array<{date: string, revenue: number}>;
+}
+
 export default function ProviderDashboardPage() {
   const user = useAppSelector(currentUser);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +38,7 @@ export default function ProviderDashboardPage() {
       try {
         setLoading(true);
         // Don't check for user ID, just pass a placeholder value or empty string
-        const data = await getProviderDashboardStats(user?._id || "provider-1");
+        const data = await getProviderDashboardStats(user?.id || "provider-1");
         setDashboardData(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -38,7 +49,7 @@ export default function ProviderDashboardPage() {
 
     // Remove user ID dependency, always fetch data
     fetchDashboardData();
-  }, []); // Remove user?._id dependency
+  }, [user?.id]); // Add user?.id as dependency
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -102,7 +113,7 @@ export default function ProviderDashboardPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Provider'}!</CardTitle>
           <CardDescription>
-            Here's an overview of your restaurant performance.
+            Here&apos;s an overview of your restaurant performance.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -151,7 +162,7 @@ export default function ProviderDashboardPage() {
         {/* Revenue Chart */}
         <ChartCard title="Revenue Trend" subtitle="Last 7 days">
           <DashboardAreaChart
-            data={dashboardData.revenueOverTime.map((item: any) => ({
+            data={dashboardData.revenueOverTime.map((item) => ({
               date: format(new Date(item.date), 'MMM dd'),
               revenue: item.revenue,
             }))}

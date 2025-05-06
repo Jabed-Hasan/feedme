@@ -17,9 +17,19 @@ import { currentUser } from "@/redux/features/auth/authSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
+// Define a type for dashboard data
+interface DashboardData {
+  totalOrders: number;
+  totalSpent: number;
+  favoriteProvider: string;
+  lastOrderDate: string;
+  orderHistory: Array<{month: string, orders: number, amount: number}>;
+  orderStatusDistribution: Array<{name: string, value: number}>;
+}
+
 export default function CustomerDashboardPage() {
   const user = useAppSelector(currentUser);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +37,7 @@ export default function CustomerDashboardPage() {
       try {
         setLoading(true);
         // Don't check for user ID, just pass a placeholder value
-        const data = await getCustomerDashboardStats(user?._id || "customer-1");
+        const data = await getCustomerDashboardStats(user?.id || "customer-1");
         setDashboardData(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -38,7 +48,7 @@ export default function CustomerDashboardPage() {
 
     // Remove user ID dependency, always fetch data
     fetchDashboardData();
-  }, []); // Remove user?._id dependency
+  }, [user?.id]); // Add user?.id as dependency
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -103,7 +113,7 @@ export default function CustomerDashboardPage() {
     try {
       const date = new Date(dashboardData.lastOrderDate);
       return format(date, 'MMM dd, yyyy');
-    } catch (e) {
+    } catch {
       return dashboardData.lastOrderDate;
     }
   };
@@ -115,7 +125,7 @@ export default function CustomerDashboardPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Customer'}!</CardTitle>
           <CardDescription>
-            Here's a summary of your food ordering activity.
+            Here&apos;s a summary of your food ordering activity.
           </CardDescription>
         </CardHeader>
       </Card>
