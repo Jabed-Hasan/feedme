@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { User, ShieldCheck, Coffee } from "lucide-react";
 
 type SignInFormData = {
   email: string;
@@ -26,6 +27,32 @@ type BackendErrorResponse = {
   error?: string;
 };
 
+// Credential types for demo buttons
+type CredentialType = {
+  email: string;
+  password: string;
+  role: string;
+};
+
+// Demo credentials
+const demoCredentials: CredentialType[] = [
+  {
+    email: "j111@gmail.com",
+    password: "user123",
+    role: "Customer"
+  },
+  {
+    email: "jabed8441@gmail.com",
+    password: "admin123",
+    role: "Provider"
+  },
+  {
+    email: "j2@gmail.com",
+    password: "user123",
+    role: "Admin"
+  }
+];
+
 export default function SignIn() {
   const [SignIn] = useSignInMutation();
   const dispatch = useAppDispatch();
@@ -35,6 +62,7 @@ export default function SignIn() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue
   } = useForm<SignInFormData>();
 
   // For debugging purposes, check if token exists on component mount
@@ -54,7 +82,7 @@ export default function SignIn() {
     
     try {
       const response = await SignIn(userData);
-      console.log('Login response:', response);
+      console.log('Login response:', JSON.stringify(response));
 
       if ("error" in response) {
         const errorResponse = response.error;
@@ -82,58 +110,67 @@ export default function SignIn() {
       }
 
       if (response.data) {
-        const { data: responseData } = response;
-        console.log('Login successful response data:', responseData);
+        const responseData = response.data;
+        console.log('Login response data:', JSON.stringify(responseData));
         
-        if (responseData.status) {
-          // Handle token based on the response structure
-          let token = null;
+        // Debug response structure
+        console.log('Response structure check:');
+        console.log('- Has success:', 'success' in responseData);
+        console.log('- Has status:', 'status' in responseData);
+        console.log('- Has data:', 'data' in responseData);
+        console.log('- Has data.accessToken:', responseData.data?.accessToken ? true : false);
+        console.log('- Has data.user:', responseData.data?.user ? true : false);
+        
+        // Try to handle various response structures
+        let token = null;
+        let userData = null;
+        
+        // Option 1: Standard structure with data.accessToken and data.user
+        if (responseData.data?.accessToken && responseData.data?.user) {
+          token = responseData.data.accessToken;
+          userData = responseData.data.user;
+        } 
+        // Option 2: Legacy structure with token and verifyUser
+        else if (responseData.data?.token && responseData.data?.verifyUser) {
+          token = responseData.data.token;
+          userData = responseData.data.verifyUser;
+        }
+        // Option 3: Structure with token at the root level
+        else if (responseData.token && responseData.user) {
+          token = responseData.token;
+          userData = responseData.user;
+        }
+        // Option 4: Directly in data object
+        else if (responseData.accessToken && responseData.user) {
+          token = responseData.accessToken;
+          userData = responseData.user;
+        }
+        
+        if (token && userData) {
+          console.log('Successfully extracted token and user data');
           
-          if (responseData.data?.token) {
-            token = responseData.data.token;
-          } else if (responseData.token) {
-            token = responseData.token;
-          }
+          // Save token to localStorage
+          localStorage.setItem('token', token);
+          console.log('Token saved to localStorage:', token.substring(0, 15) + '...');
           
-          if (token) {
-            console.log('Saving token to localStorage:', token.substring(0, 15) + '...');
-            localStorage.setItem("token", token);
-            
-            // Make sure we're saving the correct structure to Redux
-            // Check if the response has the expected structure
-            const userDataForRedux = {
-              user: responseData.data?.verifyUser || responseData.data?.user || null,
-              token: token
-            };
-            
-            console.log('Dispatching to Redux:', userDataForRedux);
-            dispatch(setUser(userDataForRedux));
-          } else {
-            console.error('No token found in response:', responseData);
-          }
-
-          if (responseData.message) {
-            toast.success(responseData.message);
-          }
-
-          // Save user role to localStorage for easier access
-          if (responseData.data?.verifyUser?.role || responseData.data?.user?.role) {
-            const role = responseData.data?.verifyUser?.role || responseData.data?.user?.role;
-            localStorage.setItem("userRole", role);
-          }
-
-          // Redirect based on user role
-          const role = responseData.data?.verifyUser?.role || responseData.data?.user?.role;
-          if (role === 'admin') {
-            router.push("/dashboard/admin");
-          } else {
-            router.push("/");
-          }
+          // Set user in Redux store
+          dispatch(
+            setUser({
+              user: userData,
+              token: token,
+            })
+          );
           
-          router.refresh();
-          setIsLoading(false);
-        } else if (responseData.message) {
-          toast.error(responseData.message);
+          toast.success(responseData.message || 'Signed in successfully!');
+          
+          // Add a small delay before navigation to ensure state is updated
+          setTimeout(() => {
+            console.log('Redirecting to home page...');
+            router.push('/');
+          }, 800);
+        } else {
+          console.error('Could not extract token and user data from response:', responseData);
+          toast.error('Login successful but unable to process user data. Please try again.');
           setIsLoading(false);
         }
       }
@@ -143,9 +180,18 @@ export default function SignIn() {
       if (error && typeof error === "object" && "message" in error) {
         const errorMessage = (error as { message: string }).message;
         toast.error(errorMessage);
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
       }
       setIsLoading(false);
     }
+  };
+
+  // Function to handle demo login button clicks
+  const handleDemoCredentials = (credential: CredentialType) => {
+    setValue("email", credential.email);
+    setValue("password", credential.password);
+    toast.success(`${credential.role} credentials loaded`);
   };
 
   return (
@@ -197,7 +243,7 @@ export default function SignIn() {
                       id="email"
                       type="email"
                       placeholder="Enter your email"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("email", { required: "Email is required" })}
                     />
                     {errors.email && (
@@ -228,7 +274,7 @@ export default function SignIn() {
                       id="password"
                       type="password"
                       placeholder="Enter your password"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("password", {
                         required: "Password is required",
                       })}
@@ -244,13 +290,46 @@ export default function SignIn() {
                 <div>
                   <Button
                     type="submit"
-                    className="text bg-feed-jungle hover:bg-feed-black focus:ring-feed-lime h-10 w-full rounded-full px-8 py-3.5 text-base font-semibold text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                    className="bg-feed-jungle hover:bg-feed-black focus:ring-feed-lime h-10 w-full rounded-full px-8 py-3.5 text-base font-semibold text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                     disabled={isLoading}
                   >
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </form>
+
+              {/* Demo Credential Buttons */}
+              <div className="mt-6">
+                <p className="text-center text-sm font-medium text-gray-700 mb-3">
+                  Try with demo credentials
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <Button
+                    type="button"
+                    onClick={() => handleDemoCredentials(demoCredentials[0])}
+                    className="bg-blue-500 hover:bg-blue-600 focus:ring-blue-300 h-auto rounded-full px-2 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none inline-flex items-center justify-center"
+                  >
+                    <User className="h-3 w-3 mr-1" />
+                    Customer
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleDemoCredentials(demoCredentials[1])}
+                    className="bg-green-500 hover:bg-green-600 focus:ring-green-300 h-auto rounded-full px-2 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none inline-flex items-center justify-center"
+                  >
+                    <Coffee className="h-3 w-3 mr-1" />
+                    Provider
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleDemoCredentials(demoCredentials[2])}
+                    className="bg-red-500 hover:bg-red-600 focus:ring-red-300 h-auto rounded-full px-2 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none inline-flex items-center justify-center"
+                  >
+                    <ShieldCheck className="h-3 w-3 mr-1" />
+                    Admin
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

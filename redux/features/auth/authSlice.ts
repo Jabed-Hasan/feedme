@@ -29,21 +29,27 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      // Handle the nested structure from API response
-      if (action.payload.data?.verifyUser) {
-        // Login response format
-        state.user = action.payload.data.verifyUser;
-        state.token = action.payload.data.token;
-      } else {
-        // Direct format (for backward compatibility)
-        const { user, token } = action.payload;
-        state.user = user;
-        state.token = token;
-      }
+      // Direct format - payload contains user and token directly
+      // This is the expected format from our updated login handler
+      const { user, token } = action.payload;
+      state.user = user;
+      state.token = token;
+      
+      console.log("Auth state updated in Redux:", { 
+        userEmail: user?.email,
+        hasToken: !!token
+      });
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      
+      // Clear localStorage when logging out
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
+      
+      console.log("User logged out from Redux store");
     },
   },
 });

@@ -128,9 +128,9 @@ export default function SignUp() {
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="flex flex-col justify-center px-8 py-10 sm:px-12 md:py-15">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
-              <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
+              <h2 className="text-center text-3xl font-semibold tracking-tight text-gray-900">
                 Create your account
               </h2>
               <p className="mt-2 text-center text-sm text-gray-600">
@@ -145,7 +145,7 @@ export default function SignUp() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label
                     htmlFor="name"
@@ -158,7 +158,7 @@ export default function SignUp() {
                       id="name"
                       type="text"
                       placeholder="Enter your full name"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("name", { required: "Name is required" })}
                     />
                     {errors.name && (
@@ -181,7 +181,7 @@ export default function SignUp() {
                       id="email"
                       type="email"
                       placeholder="Enter your email"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("email", {
                         required: "Email is required",
                         pattern: {
@@ -210,7 +210,7 @@ export default function SignUp() {
                       id="password"
                       type="password"
                       placeholder="Create a password"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("password", {
                         required: "Password is required",
                         minLength: {
@@ -227,28 +227,55 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone Number
-                  </label>
-                  <div className="mt-1">
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
-                      {...register("phone", {
-                        required: "Phone number is required",
-                      })}
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.phone.message}
-                      </p>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Phone Number
+                    </label>
+                    <div className="mt-1">
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
+                        {...register("phone", {
+                          required: "Phone number is required",
+                        })}
+                      />
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Role
+                    </label>
+                    <div className="mt-1">
+                      <Select onValueChange={(value) => setValue("role", value)}>
+                        <SelectTrigger className="focus:border-feed-jungle focus:ring-feed-jungle/20 h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:ring-2 focus:outline-none">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer">Customer</SelectItem>
+                          <SelectItem value="provider">Meal Provider</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.role && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.role.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -264,7 +291,7 @@ export default function SignUp() {
                       id="address"
                       type="text"
                       placeholder="Enter your address"
-                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/20 focus:outline-none"
+                      className="block h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:border-feed-jungle focus:ring-2 focus:ring-feed-jungle/20 focus:outline-none"
                       {...register("address", {
                         required: "Address is required",
                       })}
@@ -277,35 +304,10 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="role"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Role
-                  </label>
-                  <div className="mt-1">
-                    <Select onValueChange={(value) => setValue("role", value)}>
-                      <SelectTrigger className="focus:border-feed-lime focus:ring-feed-lime/20 h-10 w-full rounded-full border border-gray-200 bg-white px-4 py-3 text-base focus:ring-2 focus:outline-none">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="provider">Meal Provider</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.role && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.role.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
+                <div className="mt-6">
                   <Button
                     type="submit"
-                    className="bg-feed-jungle hover:bg-feed-black h-10 w-full rounded-full px-8 py-3.5 text-base font-semibold text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-[#FF0000] focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                    className="bg-feed-jungle hover:bg-feed-black h-10 w-full rounded-full px-8 py-3.5 text-base font-semibold text-white shadow-sm transition-all duration-200 focus:ring-2 focus:ring-feed-jungle focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating account..." : "Create account"}
