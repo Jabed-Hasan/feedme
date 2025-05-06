@@ -6,7 +6,7 @@ import { useSignInMutation } from "@/redux/features/auth/authApi";
 import { useAppDispatch } from "@/redux/hooks";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { toast } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -37,17 +37,29 @@ export default function SignIn() {
     formState: { errors },
   } = useForm<SignInFormData>();
 
+  // For debugging purposes, check if token exists on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    console.log('Token in localStorage on login page load:', token ? `${token.substring(0, 15)}...` : 'No token');
+  }, []);
+
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
     const userData = {
       email: data.email,
       password: data.password,
     };
+    
+    console.log('Attempting login with:', userData.email);
+    
     try {
       const response = await SignIn(userData);
+      console.log('Login response:', response);
 
       if ("error" in response) {
         const errorResponse = response.error;
+        console.error('Login error response:', errorResponse);
+        
         if (errorResponse && "data" in errorResponse && errorResponse.data) {
           const errorData = errorResponse.data as BackendErrorResponse;
 
@@ -71,17 +83,53 @@ export default function SignIn() {
 
       if (response.data) {
         const { data: responseData } = response;
+        console.log('Login successful response data:', responseData);
+        
         if (responseData.status) {
+          // Handle token based on the response structure
+          let token = null;
+          
           if (responseData.data?.token) {
-            localStorage.setItem("token", responseData.data.token);
+            token = responseData.data.token;
+          } else if (responseData.token) {
+            token = responseData.token;
+          }
+          
+          if (token) {
+            console.log('Saving token to localStorage:', token.substring(0, 15) + '...');
+            localStorage.setItem("token", token);
+            
+            // Make sure we're saving the correct structure to Redux
+            // Check if the response has the expected structure
+            const userDataForRedux = {
+              user: responseData.data?.verifyUser || responseData.data?.user || null,
+              token: token
+            };
+            
+            console.log('Dispatching to Redux:', userDataForRedux);
+            dispatch(setUser(userDataForRedux));
+          } else {
+            console.error('No token found in response:', responseData);
           }
 
-          dispatch(setUser(responseData));
           if (responseData.message) {
             toast.success(responseData.message);
           }
 
-          router.push("/");
+          // Save user role to localStorage for easier access
+          if (responseData.data?.verifyUser?.role || responseData.data?.user?.role) {
+            const role = responseData.data?.verifyUser?.role || responseData.data?.user?.role;
+            localStorage.setItem("userRole", role);
+          }
+
+          // Redirect based on user role
+          const role = responseData.data?.verifyUser?.role || responseData.data?.user?.role;
+          if (role === 'admin') {
+            router.push("/dashboard/admin");
+          } else {
+            router.push("/");
+          }
+          
           router.refresh();
           setIsLoading(false);
         } else if (responseData.message) {

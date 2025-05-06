@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   User,
   Home,
+  Mail,
 } from "lucide-react";
 
 import {
@@ -31,6 +32,11 @@ const adminMenuItems = [
     name: "Manage Users",
     path: "/dashboard/admin/manage-users",
     icon: <Users />,
+  },
+  {
+    name: "Newsletter",
+    path: "/dashboard/admin/newsletter-subscribers",
+    icon: <Mail />,
   },
   { name: "Profile", path: "/dashboard/admin/profile", icon: <User /> },
 ];

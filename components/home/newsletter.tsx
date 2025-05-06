@@ -3,50 +3,46 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSubscribeMutation } from "@/redux/features/newsletter/newsletterApi";
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  
+  const [subscribe, { isLoading: isSubmitting }] = useSubscribeMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError("");
     
     // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address");
-      setIsSubmitting(false);
       return;
     }
     
     try {
-      // Format exactly matching the screenshot
-      const response = await fetch("http://localhost:5000/api/newsletter/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
+      const result = await subscribe({ email }).unwrap();
       
-      if (data.status) {
-        toast.success(data.message || "Successfully subscribed to newsletter");
+      if (result.status) {
+        toast.success(result.message || "Successfully subscribed to newsletter");
         setEmail("");
       } else {
-        setError(data.message || "Failed to subscribe. Please try again.");
-        toast.error(data.message || "Failed to subscribe. Please try again.");
+        setError(result.message || "Failed to subscribe. Please try again.");
+        toast.error(result.message || "Failed to subscribe. Please try again.");
       }
     } catch (err) {
       console.error("Error subscribing to newsletter:", err);
-      setError("An error occurred. Please try again later.");
-      toast.error("An error occurred. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
+      let errorMessage = "An error occurred. Please try again later.";
+      
+      // Check if the error has a data property with a message
+      if (err && typeof err === 'object' && 'data' in err && err.data && 'message' in err.data) {
+        errorMessage = err.data.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
