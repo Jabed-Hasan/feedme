@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAppSelector } from "@/redux/hooks";
 import { currentUser } from "@/redux/features/auth/authSlice";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetProviderOrdersQuery } from "@/redux/features/orders/order";
 
 // Define a type for dashboard data
 interface DashboardData {
@@ -33,12 +34,17 @@ export default function ProviderDashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const providerId = user?.id || "";
+  const { data: orders = [] } = useGetProviderOrdersQuery(providerId, {
+    skip: !providerId,
+  });
+
   useEffect(() => {
     async function fetchDashboardData() {
       try {
         setLoading(true);
         // Don't check for user ID, just pass a placeholder value or empty string
-        const data = await getProviderDashboardStats(user?.id || "provider-1");
+        const data = await getProviderDashboardStats();
         setDashboardData(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -66,6 +72,46 @@ export default function ProviderDashboardPage() {
       label: "Revenue",
       color: "hsl(var(--primary))",
     }
+  };
+
+  // Generate revenue trend from orders (last 7 days)
+  const getRevenueTrend = () => {
+    const days = 7;
+    const today = new Date();
+    
+    return Array.from({ length: days }).map((_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (days - 1 - i));
+      
+      // Format the date without leading zeros in the day
+      const month = format(date, 'MMM');
+      const day = parseInt(format(date, 'dd')).toString();
+      const dateStr = `${month} ${day}`;
+      
+      const revenue = orders
+        .filter(order => {
+          const orderDate = new Date(order.createdAt);
+          const orderMonth = format(orderDate, 'MMM');
+          const orderDay = parseInt(format(orderDate, 'dd')).toString();
+          return `${orderMonth} ${orderDay}` === dateStr;
+        })
+        .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+      
+      return { date: dateStr, revenue };
+    });
+  };
+
+  // Generate order status distribution from orders
+  const getOrderStatusDistribution = () => {
+    const statusMap: Record<string, number> = {};
+    orders.forEach(order => {
+      const status = (order.status || "Unknown").toLowerCase();
+      statusMap[status] = (statusMap[status] || 0) + 1;
+    });
+    return Object.entries(statusMap).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+    }));
   };
 
   if (loading) {
@@ -107,11 +153,11 @@ export default function ProviderDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Welcome Card */}
-      <Card className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Welcome back, {user?.name || 'Provider'}!</CardTitle>
+      <Card className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm mb-4 sm:mb-6">
+        <CardHeader className="py-4 sm:py-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold">Welcome back, {user?.name || 'Provider'}!</CardTitle>
           <CardDescription>
             Here&apos;s an overview of your restaurant performance.
           </CardDescription>
@@ -123,26 +169,26 @@ export default function ProviderDashboardPage() {
         <StatCard
           title="Total Meals"
           value={dashboardData.totalMeals}
-          icon={<IconChefHat className="h-6 w-6" />}
+          icon={<IconChefHat className="h-5 w-5 sm:h-6 sm:w-6" />}
           className="bg-green-50"
         />
         <StatCard
           title="Active Meals"
           value={dashboardData.activeMeals}
           description={`${((dashboardData.activeMeals / dashboardData.totalMeals) * 100).toFixed(0)}% of total`}
-          icon={<IconChefHat className="h-6 w-6" />}
+          icon={<IconChefHat className="h-5 w-5 sm:h-6 sm:w-6" />}
           className="bg-blue-50"
         />
         <StatCard
           title="Total Orders"
           value={dashboardData.totalOrders.toLocaleString()}
-          icon={<IconShoppingCart className="h-6 w-6" />}
+          icon={<IconShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />}
           className="bg-yellow-50"
         />
         <StatCard
           title="Total Revenue"
           value={formatCurrency(dashboardData.totalRevenue)}
-          icon={<IconCurrencyDollar className="h-6 w-6" />}
+          icon={<IconCurrencyDollar className="h-5 w-5 sm:h-6 sm:w-6" />}
           className="bg-purple-50"
         />
       </StatCardGrid>
@@ -152,20 +198,17 @@ export default function ProviderDashboardPage() {
         <StatCard
           title="Average Rating"
           value={dashboardData.averageRating}
-          icon={<IconStar className="h-6 w-6 text-yellow-500" />}
+          icon={<IconStar className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />}
           className="bg-amber-50 col-span-1"
         />
       </div>
       
       {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Chart */}
         <ChartCard title="Revenue Trend" subtitle="Last 7 days">
           <DashboardAreaChart
-            data={dashboardData.revenueOverTime.map((item) => ({
-              date: format(new Date(item.date), 'MMM dd'),
-              revenue: item.revenue,
-            }))}
+            data={getRevenueTrend()}
             xKey="date"
             yKeys={["revenue"]}
             config={revenueChartConfig}
@@ -174,7 +217,7 @@ export default function ProviderDashboardPage() {
         
         {/* Order Status Distribution */}
         <ChartCard title="Order Status Distribution">
-          <DashboardPieChart data={dashboardData.orderStatusDistribution} />
+          <DashboardPieChart data={getOrderStatusDistribution()} />
         </ChartCard>
       </div>
     </div>

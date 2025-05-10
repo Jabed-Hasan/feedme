@@ -1,22 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  IconShoppingCart, 
-  IconChefHat, 
-  IconCurrencyDollar, 
-  IconUsers 
-} from "@tabler/icons-react";
 import { format } from "date-fns";
 
-import { StatCard, StatCardGrid } from "@/components/dashboard/DashboardCards";
-import { ChartCard, DashboardAreaChart, DashboardBarChart, DashboardPieChart } from "@/components/dashboard/ChartComponents";
-import { DashboardTable } from "@/components/dashboard/DashboardTable";
+import { ChartCard, DashboardAreaChart, DashboardBarChart } from "@/components/dashboard/ChartComponents";
 import { getAdminDashboardStats } from "@/app/services/dashboardService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppSelector } from "@/redux/hooks";
 import { currentUser } from "@/redux/features/auth/authSlice";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetAllUsersQuery } from "@/redux/features/user/userApi";
+import { DashboardStats } from "./components/DashboardStats";
+import { OrderStats } from "./components/OrderStats";
+import { DynamicCharts } from "./components/DynamicCharts";
 
 // Define order status type
 type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered";
@@ -41,27 +37,28 @@ interface DashboardData {
   }>;
 }
 
-// Define type for table cell
-interface TableCellProps {
-  row: {
-    original: {
-      amount: number;
-      status: OrderStatus;
-    };
-  };
-}
-
 export default function AdminDashboardPage() {
   const user = useAppSelector(currentUser);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Fetch user data from API
+  const { data: userData, isLoading: isUserDataLoading } = useGetAllUsersQuery();
 
   useEffect(() => {
     async function fetchDashboardData() {
       try {
         setLoading(true);
-        const data = await getAdminDashboardStats();
-        setDashboardData(data);
+        
+        // Only fall back to mock data if no user data available
+        if (userData && userData.length > 0) {
+          // Use only user data, don't rely on order data from API
+          const data = await getAdminDashboardStats();
+          setDashboardData(data);
+        } else {
+          const data = await getAdminDashboardStats();
+          setDashboardData(data);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -69,72 +66,11 @@ export default function AdminDashboardPage() {
       }
     }
 
-    fetchDashboardData();
-  }, []);
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Chart configs
-  const revenueChartConfig = {
-    revenue: {
-      label: "Revenue",
-      color: "hsl(var(--primary))",
+    // Only fetch dashboard data when user data is available or loading is complete
+    if (!isUserDataLoading) {
+      fetchDashboardData();
     }
-  };
-
-  const usersChartConfig = {
-    count: {
-      label: "New Users",
-      color: "hsl(var(--primary))",
-    }
-  };
-
-  // Table columns for recent orders
-  const orderColumns = [
-    {
-      accessorKey: "id",
-      header: "Order ID",
-    },
-    {
-      accessorKey: "customer",
-      header: "Customer",
-    },
-    {
-      accessorKey: "amount",
-      header: "Amount",
-      cell: ({ row }: TableCellProps) => formatCurrency(row.original.amount),
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }: TableCellProps) => {
-        const status = row.original.status;
-        let color = "bg-gray-100 text-gray-800";
-        
-        if (status === "Delivered") color = "bg-green-100 text-green-800";
-        else if (status === "Processing") color = "bg-blue-100 text-blue-800";
-        else if (status === "Shipped") color = "bg-purple-100 text-purple-800";
-        else if (status === "Pending") color = "bg-yellow-100 text-yellow-800";
-        
-        return (
-          <span className={`rounded-full px-2 py-1 text-xs font-medium ${color}`}>
-            {status}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "date",
-      header: "Date",
-    },
-  ];
+  }, [userData, isUserDataLoading]);
 
   if (loading) {
     return (
@@ -187,73 +123,13 @@ export default function AdminDashboardPage() {
       </Card>
       
       {/* Stats Overview */}
-      <StatCardGrid>
-        <StatCard
-          title="Total Users"
-          value={dashboardData.totalUsers.toLocaleString()}
-          icon={<IconUsers className="h-6 w-6" />}
-          className="bg-blue-50"
-        />
-        <StatCard
-          title="Total Providers"
-          value={dashboardData.totalProviders.toLocaleString()}
-          icon={<IconChefHat className="h-6 w-6" />}
-          className="bg-green-50"
-        />
-        <StatCard
-          title="Total Orders"
-          value={dashboardData.totalOrders.toLocaleString()}
-          icon={<IconShoppingCart className="h-6 w-6" />}
-          className="bg-yellow-50"
-        />
-        <StatCard
-          title="Total Revenue"
-          value={formatCurrency(dashboardData.totalRevenue)}
-          icon={<IconCurrencyDollar className="h-6 w-6" />}
-          className="bg-purple-50"
-        />
-      </StatCardGrid>
+      <DashboardStats />
       
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <ChartCard title="Revenue Trend" subtitle="Last 6 months">
-          <DashboardBarChart
-            data={dashboardData.revenueOverTime}
-            xKey="month"
-            yKeys={["revenue"]}
-            config={revenueChartConfig}
-          />
-        </ChartCard>
-        
-        {/* New Users Chart */}
-        <ChartCard title="New Users" subtitle="Last 7 days">
-          <DashboardAreaChart
-            data={dashboardData.newUsersOverTime.map((item) => ({
-              date: format(new Date(item.date), 'MMM dd'),
-              count: item.count,
-            }))}
-            xKey="date"
-            yKeys={["count"]}
-            config={usersChartConfig}
-          />
-        </ChartCard>
-      </div>
+      {/* Dynamic Charts Section */}
+      <DynamicCharts />
       
-      {/* Order Status Pie Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Order Status Distribution" subtitle="Current status of all orders">
-          <DashboardPieChart data={dashboardData.orderStatusDistribution} />
-        </ChartCard>
-        
-        {/* Recent Orders Table */}
-        <DashboardTable
-          title="Recent Orders"
-          subtitle="Latest transactions across the platform"
-          columns={orderColumns}
-          data={dashboardData.recentOrders}
-        />
-      </div>
+      {/* Order Status & Recent Orders */}
+      <OrderStats />
     </div>
   );
 }

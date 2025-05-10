@@ -7,6 +7,7 @@ import {
   User,
   Home,
   Mail,
+  BookText,
 } from "lucide-react";
 
 import {
@@ -38,6 +39,7 @@ const adminMenuItems = [
     path: "/dashboard/admin/newsletter-subscribers",
     icon: <Mail />,
   },
+  { name: "Manage Blogs", path: "/dashboard/admin/blogs", icon: <BookText /> },
   { name: "Profile", path: "/dashboard/admin/profile", icon: <User /> },
 ];
 

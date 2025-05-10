@@ -30,12 +30,14 @@ const Header = () => {
         </p>
 
         <div className="flex items-center gap-4 mb-3.5">
-          <Button className="border-feed-jungle text-feed hover:bg-feed-jungle bg-feed-lime h-10 rounded-full border-2 text-base font-medium transition-colors hover:text-lime-400">
-            Order now
-          </Button>
+          <Link href="/find-meals">
+            <Button className="border-feed-jungle text-feed hover:bg-feed-jungle bg-feed-lime h-10 rounded-full border-2 text-base font-medium transition-colors hover:text-lime-400">
+              Order now
+            </Button>
+          </Link>
           <Link
             className="hover:text-feed-jungle border-feed-jungle text-base font-medium text-gray-800 duration-100 ease-in-out hover:border-b-2"
-            href="/"
+            href="/find-meals"
           >
             See the menu
           </Link>

@@ -176,7 +176,7 @@ export default function ManageOrdersPage() {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             stage: newStatus.toLowerCase(),
@@ -419,7 +419,7 @@ export default function ManageOrdersPage() {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              Authorization: token,
+              Authorization: `Bearer ${token}`,
             },
             credentials: "include",
           });

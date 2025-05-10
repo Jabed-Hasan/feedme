@@ -15,9 +15,9 @@ const About = () => {
         />
       </div>
       <div className="order-1 col-span-1 flex flex-col items-start justify-center gap-4.5 md:order-2 lg:col-span-3 xl:gap-4">
-        <h5 className="text-feed-jungle text-2xl font-medium xl:text-3xl">
+        <h3 className="text-feed-jungle text-4xl font-medium xl:text-3xl">
           About Us
-        </h5>
+        </h3>
         <h6 className="text-3xl font-medium xl:text-4xl">
           Food is an Important Part of your Health
         </h6>

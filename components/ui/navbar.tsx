@@ -59,6 +59,10 @@ const Navbar = () => {
       link: "/find-meals",
     },
     {
+      name: "Blog",
+      link: "/blog",
+    },
+    {
       name: "About",
       link: "/about",
     },
@@ -220,13 +224,19 @@ const Navbar = () => {
               Find Meals
             </Link>
             <Link
+              href="/blog"
+              className="hover:text-feed-lime block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Blog
+            </Link>
+            <Link
               href="/about"
               className="hover:text-feed-lime block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
               About
             </Link>
-
             <Link
               href="/contact"
               className="hover:text-feed-lime block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
@@ -234,7 +244,7 @@ const Navbar = () => {
             >
               Contact Us
             </Link>
-            {!user ? (
+            {user ? (
               <>
                 <Link
                   href="/dashboard"

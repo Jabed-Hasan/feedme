@@ -155,3 +155,29 @@ body.cloudinary-modal-open {
   overflow: auto !important;
   position: static !important;
 }
+
+/* Add custom scrollbar styles at the end of the file */
+
+/* For Firefox */
+.scrollbar-textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f1f1f1;
+}
+
+.scrollbar-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-textarea::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.scrollbar-textarea::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+}
+
+.scrollbar-textarea::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}

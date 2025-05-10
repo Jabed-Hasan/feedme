@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import ReviewSummary from "@/components/ReviewSummary";
 
 // Define interface for meal object
 interface Meal {
@@ -193,38 +194,7 @@ export default function FindMealsPage() {
   };
 
   const renderRating = (meal: Meal) => {
-    const rating = meal.ratings?.average ?? meal.rating ?? 0;
-    const reviewCount = meal.ratings?.count ?? meal.reviewCount ?? 0;
-
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return (
-      <div className="flex items-center">
-        <div className="flex">
-          {[...Array(fullStars)].map((_, i) => (
-            <Star
-              key={`full-${i}`}
-              className="h-4 w-4 fill-yellow-400 text-yellow-400"
-            />
-          ))}
-          {hasHalfStar && (
-            <div className="relative h-4 w-4">
-              <Star className="absolute h-4 w-4 text-gray-300" />
-              <Star
-                className="absolute h-4 w-4 fill-yellow-400 text-yellow-400"
-                style={{ clipPath: "inset(0 50% 0 0)" }}
-              />
-            </div>
-          )}
-          {[...Array(emptyStars)].map((_, i) => (
-            <Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />
-          ))}
-        </div>
-        <span className="ml-1 text-sm text-gray-500">({reviewCount})</span>
-      </div>
-    );
+    return <ReviewSummary meal={meal} size="md" />;
   };
 
   // Pagination UI component

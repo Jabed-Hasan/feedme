@@ -1,11 +1,11 @@
 import Link from "next/link";
 import React from "react";
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-feed-black text-feed-lime py-5 pt-10">
-      <div className="container grid grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
+    <footer className="bg-feed-black text-feed-lime py-8 pt-10">
+      <div className="container grid grid-cols-1 items-start gap-10 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
         <div className="flex flex-col items-start gap-4">
           <Link href="/" className="text-3xl font-semibold">
             feedme.
@@ -14,70 +14,81 @@ const Footer = () => {
             Feedme delivers fresh, fully customizable meals made just for
             you—simple, healthy, and tailored to your unique lifestyle.
           </p>
+          <div className="mt-4 flex space-x-4">
+            <a href="#" aria-label="Facebook" className="text-feed-lime hover:text-white transition-colors">
+              <FaFacebook size={20} />
+            </a>
+            <a href="#" aria-label="Instagram" className="text-feed-lime hover:text-white transition-colors">
+              <FaInstagram size={20} />
+            </a>
+            <a href="#" aria-label="Twitter" className="text-feed-lime hover:text-white transition-colors">
+              <FaTwitter size={20} />
+            </a>
+          </div>
         </div>
         <div>
-          <h6 className="mb-4 font-bold uppercase">Our Store</h6>
-          <ul className="space-y-2">
+          <h6 className="mb-4 font-bold uppercase">Quick Links</h6>
+          <ul className="space-y-3">
             <li>
-              <a href="#" className="hover:underline">
+              <Link href="/" className="hover:underline hover:text-white transition-colors">
                 Home
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
-                About
-              </a>
+              <Link href="/about" className="hover:underline hover:text-white transition-colors">
+                About Us
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
-                Contact
-              </a>
+              <Link href="/find-meals" className="hover:underline hover:text-white transition-colors">
+                Find Meals
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
-                Services
-              </a>
+              <Link href="/blog" className="hover:underline hover:text-white transition-colors">
+                Blog
+              </Link>
             </li>
           </ul>
         </div>
         <div>
-          <h6 className="mb-4 font-bold uppercase">Further Links</h6>
-          <ul className="space-y-2">
+          <h6 className="mb-4 font-bold uppercase">Help & Support</h6>
+          <ul className="space-y-3">
             <li>
-              <a href="#" className="hover:underline">
-                Terms & Condition
-              </a>
+              <Link href="/contact" className="hover:underline hover:text-white transition-colors">
+                Contact Us
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
-                Privacy Policy
-              </a>
+              <Link href="/faq" className="hover:underline hover:text-white transition-colors">
+                FAQ
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
-                Learning
-              </a>
+              <Link href="/dashboard/customer/my-orders" className="hover:underline hover:text-white transition-colors">
+                Order Tracking
+              </Link>
             </li>
           </ul>
         </div>
         <div>
           <h6 className="mb-4 font-bold uppercase">Get In Touch</h6>
-          <p className="mb-2 flex items-center text-sm">
-            <FaMapMarkerAlt className="mr-2" />
-            7462 Oak Ridge Omaha, NE
+          <p className="mb-3 flex items-center text-sm group">
+            <FaMapMarkerAlt className="mr-3 text-feed-lime" />
+            <span className="group-hover:text-white transition-colors">7462 Oak Ridge Omaha, NE</span>
           </p>
-          <p className="mb-2 flex items-center text-sm">
-            <FaPhoneAlt className="mr-2" />
-            267-8745-456
+          <p className="mb-3 flex items-center text-sm group">
+            <FaPhoneAlt className="mr-3 text-feed-lime" />
+            <a href="tel:267-8745-456" className="group-hover:text-white transition-colors">267-8745-456</a>
           </p>
-          <p className="flex items-center text-sm">
-            <FaEnvelope className="mr-2" />
-            information@yourdomain.com
+          <p className="flex items-center text-sm group">
+            <FaEnvelope className="mr-3 text-feed-lime" />
+            <a href="mailto:info@feedme.com" className="group-hover:text-white transition-colors">info@feedme.com</a>
           </p>
         </div>
       </div>
-      <div className="mx-auto mt-8 max-w-6xl px-4 text-center text-xs sm:px-6 lg:px-8">
-        Copyright © 2025 feedme | Powered by feedme
+      <div className="border-t border-gray-800 mx-auto mt-8 pt-6 max-w-6xl px-4 text-center text-sm sm:px-6 lg:px-8">
+        Copyright © {new Date().getFullYear()} feedme | All Rights Reserved
       </div>
     </footer>
   );

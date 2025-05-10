@@ -26,6 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMealImageUrl } from "./addToCartUtils";
 import AddToCartButton from "./AddToCartButton";
+import MealReviews from "@/components/MealReviews";
+import { useGetMealReviewsQuery } from "@/redux/features/reviews/reviewApi";
+import ReviewSummary from "@/components/ReviewSummary";
 
 // Meal interface used for API response typing
 type Meal = {
@@ -121,6 +124,8 @@ export default function OrderPage() {
     Array<{ date: string; day: number; available: number }>
   >([]);
   const [currentMonth, setCurrentMonth] = useState<string>("");
+
+  const { data: reviewsData } = useGetMealReviewsQuery(mealId);
 
   // Initialize calendar data
   useEffect(() => {
@@ -348,19 +353,7 @@ export default function OrderPage() {
               <div className="mt-4 border-t pt-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-lg font-medium">Customer Reviews</h3>
-                  <div className="flex items-center">
-                    <Star className="mr-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">
-                      {typedMeal.ratings?.average?.toFixed(1) ||
-                        typedMeal.rating ||
-                        "0"}
-                    </span>
-                    <span className="mx-1 text-gray-400">•</span>
-                    <span className="text-sm text-gray-500">
-                      {typedMeal.ratings?.count || typedMeal.reviewCount || 0}{" "}
-                      reviews
-                    </span>
-                  </div>
+                  <ReviewSummary meal={typedMeal} />
                 </div>
 
                 {typedMeal.ratings?.reviews &&
@@ -406,16 +399,34 @@ export default function OrderPage() {
                         // Keep default "Recently"
                       }
 
-                      // Get user name from userId since customerName doesn't exist
+                      // Get user info from reviews data if available
                       let userName = "Customer";
                       let userInitials = "CU";
-
-                      // Extract initials from userId
-                      if (review.userId) {
-                        // Use userId for display
-                        const shortId = review.userId.substring(0, 4);
-                        userName = `Customer ${shortId}`;
-                        userInitials = shortId.substring(0, 2).toUpperCase();
+                      
+                      // First try to get user info from reviewsData if it exists
+                      if (reviewsData?.data?.reviews) {
+                        const matchingReview = reviewsData.data.reviews.find(
+                          r => r._id === review._id
+                        );
+                        
+                        if (matchingReview && typeof matchingReview.user === 'object' && matchingReview.user.name) {
+                          userName = matchingReview.user.name;
+                          userInitials = userName.substring(0, 2).toUpperCase();
+                        }
+                      }
+                      
+                      // If not found in reviewsData, try to extract from userId
+                      if (userName === "Customer" && review.userId) {
+                        // Check if userId is an object with a name property (real user info)
+                        if (typeof review.userId === 'object' && review.userId.name) {
+                          userName = review.userId.name;
+                          userInitials = userName.substring(0, 2).toUpperCase();
+                        } else if (typeof review.userId === 'string') {
+                          // For backward compatibility, still handle string userIds
+                          const shortId = review.userId.substring(0, 4);
+                          userName = `Customer ${shortId}`;
+                          userInitials = shortId.substring(0, 2).toUpperCase();
+                        }
                       }
 
                       return (
@@ -456,6 +467,54 @@ export default function OrderPage() {
                         </div>
                       );
                     })}
+                  </div>
+                ) : reviewsData && reviewsData.data && reviewsData.data.reviews && reviewsData.data.reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviewsData.data.reviews.slice(0, 3).map((review, index) => (
+                      <div
+                        key={index}
+                        className="border-b pb-3 last:border-b-0"
+                      >
+                        <div className="flex items-start">
+                          <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-800">
+                            {typeof review.user === 'object' && review.user.name 
+                              ? review.user.name.substring(0, 2).toUpperCase() 
+                              : 'CU'}
+                          </div>
+                          <div className="flex-1">
+                            <div className="mb-1 flex items-center justify-between">
+                              <span className="text-sm font-medium">
+                                {typeof review.user === 'object' && review.user.name 
+                                  ? review.user.name 
+                                  : `Customer ${review._id.substring(0, 4)}`}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(review.createdAt).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                            </div>
+                            <div className="mb-1 flex items-center">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${
+                                    star <= review.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-700">
+                              {review.comment || "This meal was delicious!"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="rounded-lg bg-gray-50 p-4 text-center">
@@ -782,6 +841,15 @@ export default function OrderPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      <div className="mt-12">
+        <MealReviews
+          reviews={reviewsData?.data.reviews || []}
+          averageRating={reviewsData?.data.averageRating || 0}
+          totalReviews={reviewsData?.data.totalReviews || 0}
+          meal={typedMeal}
+        />
       </div>
     </div>
   );
